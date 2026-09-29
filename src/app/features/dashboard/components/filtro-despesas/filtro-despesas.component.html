@@ -1,0 +1,53 @@
+@if (visivel) {
+  <!-- Overlay escuro -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity">
+    
+    <!-- Modal -->
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 transform transition-all">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-medium text-gray-900">
+          Filtrar {{ contexto === 'tabela' ? 'Tabela' : 'Indicadores' }}
+        </h3>
+        <button (click)="fechar()" class="text-gray-400 hover:text-gray-500">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <form [formGroup]="filtroForm" (ngSubmit)="aplicarFiltro()" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Categoria</label>
+          <select formControlName="categoria" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
+            <option value="">Todas as categorias</option>
+            <option value="Alimentação">Alimentação</option>
+            <option value="Entretenimento">Entretenimento</option>
+            <option value="Pets">Pets</option>
+            <option value="Serviços">Serviços</option>
+            <option value="Vestimenta">Vestimenta</option>
+          </select>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Data Início</label>
+            <input type="date" formControlName="dataInicio" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Data Fim</label>
+            <input type="date" formControlName="dataFim" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+          </div>
+        </div>
+
+        <div class="mt-6 flex justify-end space-x-3">
+          <button type="button" (click)="limparFiltro()" class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            Limpar
+          </button>
+          <button type="submit" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+            Aplicar Filtro
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

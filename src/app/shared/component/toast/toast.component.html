@@ -1,0 +1,25 @@
+<!-- Container fixo no canto inferior direito -->
+<div class="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none">
+  
+  @for (toast of toastService.toasts$ | async; track toast.id) {
+    <div 
+      class="flex items-center p-4 min-w-[300px] text-white rounded-lg shadow-xl pointer-events-auto transform transition-all duration-300 animate-fade-in-up"
+      [ngClass]="{
+        'bg-green-600': toast.tipo === 'sucesso',
+        'bg-red-600': toast.tipo === 'erro',
+        'bg-yellow-500 text-gray-900': toast.tipo === 'aviso'
+      }">
+      
+      <span class="flex-1 font-medium">{{ toast.mensagem }}</span>
+      
+      <!-- Botão fechar manual -->
+      <button (click)="toastService.remover(toast.id)" class="ml-4 hover:opacity-75 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      
+    </div>
+  }
+
+</div>

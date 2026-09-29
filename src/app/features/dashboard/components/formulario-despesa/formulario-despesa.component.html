@@ -1,0 +1,53 @@
+<div class="bg-white rounded-lg shadow p-6">
+  <h2 class="text-lg font-semibold text-gray-700 mb-4">Nova Despesa</h2>
+  
+  <form [formGroup]="despesaForm" (ngSubmit)="submit()" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <div class="md:col-span-2">
+      <label class="block text-sm font-medium text-gray-700">Descrição</label>
+      <input type="text" formControlName="descricao" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+    </div>
+    
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Valor</label>
+      <input type="number" step="0.01" formControlName="valor" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Data</label>
+      <input type="date" formControlName="data" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Categoria</label>
+      <select 
+        formControlName="categoria" 
+        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white"
+        [ngClass]="{
+          'text-gray-400': despesaForm.get('categoria')?.value === '',
+          'text-gray-900': despesaForm.get('categoria')?.value !== ''
+        }">
+        
+        <!-- placeholder -->
+        <option value="" disabled selected>Selecione uma categoria...</option>
+        
+        <!-- opções-->
+        <option value="Alimentação" class="text-gray-900">Alimentação</option>
+        <option value="Entretenimento" class="text-gray-900">Entretenimento</option>
+        <option value="Pets" class="text-gray-900">Pets</option>
+        <option value="Serviços" class="text-gray-900">Serviços</option>
+        <option value="Vestimenta" class="text-gray-900">Vestimenta</option>
+      </select>
+    </div>
+
+    <div class="md:col-span-5 flex justify-end space-x-3 mt-2">
+      @if (despesaEmEdicao) {
+        <button type="button" (click)="cancelar()" class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+          Cancelar
+        </button>
+      }
+      <button type="submit" [disabled]="despesaForm.invalid" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+        {{ despesaEmEdicao ? 'Atualizar Despesa' : 'Salvar Despesa' }}
+      </button>
+    </div>
+  </form>
+</div>
