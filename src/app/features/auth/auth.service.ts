@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class AuthService {
   // Rota exata do Spring Boot configurada na etapa do back-end
-  private readonly API_URL = 'http://localhost:8080/api/auth/login';
+  private readonly API_URL = 'https://controle-despesas-api.onrender.com/api/auth/login';
 
   constructor(private http: HttpClient) {}
 
