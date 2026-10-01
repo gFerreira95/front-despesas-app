@@ -4,11 +4,12 @@ import { AuthService } from './../auth.service';
 import { TokenService } from '../../../core/services/token/token.service';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, CommonModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
