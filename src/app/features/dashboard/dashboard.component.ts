@@ -53,28 +53,35 @@ export class DashboardComponent implements OnInit {
 
   carregarDespesas(): void {
     this.carregando = true;
-    this.despesaService.listarTodas().subscribe({
-      next: (dados: any) => {
-        let listaTratada: Despesa[] = [];
-        if (Array.isArray(dados)) {
-          listaTratada = dados;
-        } else if (dados && Array.isArray(dados.content)) {
-          listaTratada = dados.content;
+    this.cdr.detectChanges(); // Força a tela a mostrar o carregamento imediatamente
+
+    this.despesaService.listarTodas()
+      .pipe(
+        finalize(() => {
+          // Este bloco vai rodar CUSTE O QUE CUSTAR no fim da requisição
+          this.carregando = false;
+          this.cdr.detectChanges(); // Destrava a tela instantaneamente
+        })
+      )
+      .subscribe({
+        next: (dados: any) => {
+          let listaTratada: Despesa[] = [];
+          
+          if (Array.isArray(dados)) {
+            listaTratada = dados;
+          } else if (dados && Array.isArray(dados.content)) {
+            listaTratada = dados.content; // Lida com a paginação do Spring
+          }
+          
+          this.despesasGlobais = listaTratada;
+          this.sincronizarFiltros();
+        },
+        error: (erro) => {
+          console.error('Erro ao carregar despesas', erro);
+          this.despesasGlobais = [];
+          this.sincronizarFiltros();
         }
-        
-        this.despesasGlobais = listaTratada;
-        this.sincronizarFiltros();
-        this.carregando = false;
-        this.cdr.detectChanges();
-      },
-      error: (erro) => {
-        console.error('Erro ao carregar despesas', erro);
-        this.despesasGlobais = [];
-        this.sincronizarFiltros();
-        this.carregando = false;
-        this.cdr.detectChanges();
-      }
-    });
+      });
   }
 
   salvarDespesa(dadosFormulario: any): void {
@@ -116,9 +123,10 @@ export class DashboardComponent implements OnInit {
       .pipe(
         finalize(() => {
           this.carregando = false;
+          this.cdr.detectChanges();
         })
       )
-      
+
       .subscribe({
         next: (novaDespesa) => {
           this.despesasGlobais.push(novaDespesa);
