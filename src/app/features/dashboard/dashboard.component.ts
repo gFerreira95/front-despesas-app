@@ -1,4 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { finalize } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { DespesaService } from '../../core/services/despesa/despesa.service';
@@ -18,6 +19,8 @@ import { ToastService } from '../../core/services/toast/toast.service';
   styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent implements OnInit {
+
+ 
   
   // Fonte da verdade (dados brutos da API)
   despesasGlobais: Despesa[] = [];
@@ -75,9 +78,21 @@ export class DashboardComponent implements OnInit {
   }
 
   salvarDespesa(dadosFormulario: any): void {
+
+    // Ativa o estado de carregamento antes de iniciar a requisição
+    this.carregando = true; 
+     
     if (this.despesaSelecionada && this.despesaSelecionada.id) {
       // MODO EDIÇÃO (PUT)
-      this.despesaService.atualizar(this.despesaSelecionada.id, dadosFormulario).subscribe({
+      this.despesaService.atualizar(this.despesaSelecionada.id, dadosFormulario)
+      
+      .pipe(
+        finalize(() => {
+          this.carregando = false;
+        })
+      )
+      
+      .subscribe({
         next: (despesaAtualizada) => {
           // Atualiza a despesa na lista local
           const index = this.despesasGlobais.findIndex(d => d.id === despesaAtualizada.id);
@@ -96,7 +111,15 @@ export class DashboardComponent implements OnInit {
       });
     } else {
       // MODO CRIAÇÃO (POST) - (Seu código existente com os Toasts)
-      this.despesaService.salvar(dadosFormulario).subscribe({
+      this.despesaService.salvar(dadosFormulario)
+      
+      .pipe(
+        finalize(() => {
+          this.carregando = false;
+        })
+      )
+      
+      .subscribe({
         next: (novaDespesa) => {
           this.despesasGlobais.push(novaDespesa);
           this.sincronizarFiltros();  

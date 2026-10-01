@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { AuthService } from './../auth.service';
 import { TokenService } from '../../../core/services/token/token.service';
 import { Router } from '@angular/router';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -13,6 +14,7 @@ import { Router } from '@angular/router';
 })
 export class LoginComponent {
   loginForm: FormGroup;
+  isLoading = false; // Estado de carregamento para desabilitar o botão durante a requisição
 
   constructor(
     private fb: FormBuilder,
@@ -28,7 +30,14 @@ export class LoginComponent {
 
   onSubmit(): void {
     if (this.loginForm.valid) {
-      this.authService.login(this.loginForm.value).subscribe({
+      this.isLoading = true; // Ativa o estado de carregamento
+      this.authService.login(this.loginForm.value) 
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
+      .subscribe({
         next: (response) => {
           // Assume que o back-end retorna um objeto com a propriedade 'token'
           if (response && response.token) {
