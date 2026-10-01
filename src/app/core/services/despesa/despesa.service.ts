@@ -8,7 +8,7 @@ import { Despesa } from '../../models/despesa.model';
 })
 export class DespesaService {
   // Rota correspondente ao controlador de despesas no Spring Boot
-  private readonly API_URL = 'https://controle-despesas-api.onrender.com';
+  private readonly API_URL = 'https://controle-despesas-api.onrender.com/api/despesas';
 
   constructor(private http: HttpClient) {}
 
