@@ -20,16 +20,16 @@ import { ToastService } from '../../core/services/toast/toast.service';
 })
 export class DashboardComponent implements OnInit {
 
- 
-  
+
+
   // Fonte da verdade (dados brutos da API)
   despesasGlobais: Despesa[] = [];
   despesaSelecionada: Despesa | null = null;
-  
+
   // Arrays separados para permitir filtros independentes
   despesasTabela: Despesa[] = [];
   despesasIndicadores: Despesa[] = [];
-  
+
   // Estado dos filtros
   filtroTabelaAtivo: FiltroDespesa | null = null;
   filtroIndicadoresAtivo: FiltroDespesa | null = null;
@@ -38,6 +38,7 @@ export class DashboardComponent implements OnInit {
   modalFiltroVisivel: boolean = false;
   contextoFiltroAtual: 'tabela' | 'indicadores' = 'tabela';
   carregando: boolean = true;
+  isLoading: boolean = false; // Estado de carregamento para desabilitar o botão durante a requisição
 
   constructor(
     private despesaService: DespesaService,
@@ -45,7 +46,7 @@ export class DashboardComponent implements OnInit {
     private router: Router,
     private cdr: ChangeDetectorRef,
     private toastService: ToastService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.carregarDespesas();
@@ -66,13 +67,13 @@ export class DashboardComponent implements OnInit {
       .subscribe({
         next: (dados: any) => {
           let listaTratada: Despesa[] = [];
-          
+
           if (Array.isArray(dados)) {
             listaTratada = dados;
           } else if (dados && Array.isArray(dados.content)) {
             listaTratada = dados.content; // Lida com a paginação do Spring
           }
-          
+
           this.despesasGlobais = listaTratada;
           this.sincronizarFiltros();
         },
@@ -87,58 +88,58 @@ export class DashboardComponent implements OnInit {
   salvarDespesa(dadosFormulario: any): void {
 
     // Ativa o estado de carregamento antes de iniciar a requisição
-    this.carregando = true; 
-     
+    this.isLoading = true;
+
     if (this.despesaSelecionada && this.despesaSelecionada.id) {
       // MODO EDIÇÃO (PUT)
       this.despesaService.atualizar(this.despesaSelecionada.id, dadosFormulario)
-      
-      .pipe(
-        finalize(() => {
-          this.carregando = false;
-        })
-      )
-      
-      .subscribe({
-        next: (despesaAtualizada) => {
-          // Atualiza a despesa na lista local
-          const index = this.despesasGlobais.findIndex(d => d.id === despesaAtualizada.id);
-          if (index !== -1) {
-            this.despesasGlobais[index] = despesaAtualizada;
+
+        .pipe(
+          finalize(() => {
+            this.isLoading = false;
+          })
+        )
+
+        .subscribe({
+          next: (despesaAtualizada) => {
+            // Atualiza a despesa na lista local
+            const index = this.despesasGlobais.findIndex(d => d.id === despesaAtualizada.id);
+            if (index !== -1) {
+              this.despesasGlobais[index] = despesaAtualizada;
+            }
+            this.despesaSelecionada = null; // Limpa o estado
+            this.sincronizarFiltros();
+            this.cdr.detectChanges();
+            this.toastService.mostrar('Despesa atualizada com sucesso!', 'sucesso');
+          },
+          error: (erro) => {
+            console.error('Erro ao atualizar', erro);
+            this.toastService.mostrar('Erro ao atualizar a despesa.', 'erro');
           }
-          this.despesaSelecionada = null; // Limpa o estado
-          this.sincronizarFiltros();
-          this.cdr.detectChanges();
-          this.toastService.mostrar('Despesa atualizada com sucesso!', 'sucesso');
-        },
-        error: (erro) => {
-          console.error('Erro ao atualizar', erro);
-          this.toastService.mostrar('Erro ao atualizar a despesa.', 'erro');
-        }
-      });
+        });
     } else {
       // MODO CRIAÇÃO (POST) - (Seu código existente com os Toasts)
       this.despesaService.salvar(dadosFormulario)
-      
-      .pipe(
-        finalize(() => {
-          this.carregando = false;
-          this.cdr.detectChanges();
-        })
-      )
 
-      .subscribe({
-        next: (novaDespesa) => {
-          this.despesasGlobais.push(novaDespesa);
-          this.sincronizarFiltros();  
-          this.cdr.detectChanges();
-          this.toastService.mostrar('Despesa salva com sucesso!', 'sucesso');
-        },
-        error: (erro) => {
-          console.error('Erro ao salvar despesa', erro);
-          this.toastService.mostrar('Erro ao guardar a despesa.', 'erro');
-        }
-      });
+        .pipe(
+          finalize(() => {
+            this.isLoading = false;
+            this.cdr.detectChanges();
+          })
+        )
+
+        .subscribe({
+          next: (novaDespesa) => {
+            this.despesasGlobais.push(novaDespesa);
+            this.sincronizarFiltros();
+            this.cdr.detectChanges();
+            this.toastService.mostrar('Despesa salva com sucesso!', 'sucesso');
+          },
+          error: (erro) => {
+            console.error('Erro ao salvar despesa', erro);
+            this.toastService.mostrar('Erro ao guardar a despesa.', 'erro');
+          }
+        });
     }
   }
 
@@ -205,7 +206,7 @@ export class DashboardComponent implements OnInit {
   // --- Lógica de Edição ---
   prepararEdicao(despesa: Despesa): void {
     // Clona o objeto para evitar binding bidirecional acidental na tabela
-    this.despesaSelecionada = { ...despesa }; 
+    this.despesaSelecionada = { ...despesa };
     window.scrollTo({ top: 0, behavior: 'smooth' }); // Rola a página suavemente para o formulário
   }
 
@@ -213,7 +214,7 @@ export class DashboardComponent implements OnInit {
     this.despesaSelecionada = null;
   }
 
-  
+
 
   logout(): void {
     this.tokenService.removerToken();

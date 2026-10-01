@@ -14,7 +14,7 @@ export class FormularioDespesaComponent {
   // Recebe a despesa a ser editada do componente pai (Dashboard)
   @Input() despesaEmEdicao: Despesa | null = null;
   // Recebe o estado de carregamento do componente pai (Dashboard)
-  @Input() carregando: boolean = false;
+  @Input() isLoading: boolean = false;
 
   // Emite os dados do formulário para o componente pai (Dashboard)
   @Output() aoSalvar = new EventEmitter<any>();

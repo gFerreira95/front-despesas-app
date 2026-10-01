@@ -24,7 +24,7 @@
     <!-- Formulário -->
     <app-formulario-despesa 
       [despesaEmEdicao]="despesaSelecionada"
-      [carregando]="carregando"
+      [isLoading]="isLoading"
       (aoSalvar)="salvarDespesa($event)"
       (aoCancelar)="cancelarEdicao()">
     </app-formulario-despesa>
