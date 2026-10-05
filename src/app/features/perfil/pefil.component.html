@@ -1,0 +1,67 @@
+<div class="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md mt-10">
+  <h2 class="text-2xl font-bold text-gray-800 mb-6">Meu Perfil</h2>
+
+  <!-- Alerta condicional via @if (Angular 17) -->
+  @if (alertaLimite) {
+    <div class="mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
+      <p class="font-bold">Atenção!</p>
+      <p>Você já consumiu {{ percentualGasto | number:'1.0-0' }}% do seu limite de gastos mensal.</p>
+    </div>
+  }
+
+  <form [formGroup]="perfilForm" (ngSubmit)="salvarPerfil()" class="space-y-6">
+    
+    <!-- Upload de Foto Base64 -->
+    <div class="flex items-center space-x-6">
+      <div class="shrink-0">
+        <!-- Usa a string Base64 no [src], ou uma imagem padrão de avatar do Tailwind/Placeholder -->
+        <img class="h-24 w-24 object-cover rounded-full border border-gray-200 shadow-sm bg-gray-50" 
+             [src]="fotoPreview || 'https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff'" 
+             alt="Foto de perfil">
+      </div>
+      <label class="block">
+        <span class="sr-only">Escolher foto de perfil</span>
+        <input type="file" accept="image/*" (change)="onFileSelected($event)"
+          class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"/>
+      </label>
+    </div>
+
+    <hr class="border-gray-200">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Renda Mensal Bruta (R$)</label>
+        <input type="number" formControlName="rendaMensalBruta" 
+               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Limite de Gastos Mensal (R$)</label>
+        <input type="number" formControlName="limiteGastos" 
+               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+      </div>
+    </div>
+
+    <!-- Barra Visual de Progresso -->
+    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+      <div class="h-2.5 rounded-full transition-all duration-500"
+           [ngClass]="alertaLimite ? 'bg-red-600' : 'bg-green-600'"
+           [style.width.%]="percentualGasto">
+      </div>
+    </div>
+
+    <div class="flex justify-end pt-4">
+      <button type="submit" [disabled]="perfilForm.invalid || isLoading"
+        class="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 disabled:opacity-50 min-w-[150px]">
+        @if (isLoading) {
+          <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Salvando...
+        } @else {
+          Salvar Alterações
+        }
+      </button>
+    </div>
+  </form>
+</div>
