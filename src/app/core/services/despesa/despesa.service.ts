@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, retry } from 'rxjs';
 import { Despesa } from '../../models/despesa.model';
 
 @Injectable({
@@ -14,19 +14,19 @@ export class DespesaService {
   constructor(private http: HttpClient) {}
 
   listarTodas(): Observable<Despesa[]> {
-    return this.http.get<Despesa[]>(this.API_URL);
+    return this.http.get<Despesa[]>(this.API_URL).pipe(retry(3));
   }
 
   salvar(despesa: Despesa): Observable<Despesa> {
-    return this.http.post<Despesa>(this.API_URL, despesa);
+    return this.http.post<Despesa>(this.API_URL, despesa).pipe(retry(3));
   }
 
 
   excluir(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.API_URL}/${id}`);
+    return this.http.delete<void>(`${this.API_URL}/${id}`).pipe(retry(3));
   }
 
   atualizar(id: number, despesa: Despesa): Observable<Despesa> {
-    return this.http.put<Despesa>(`${this.API_URL}/${id}`, despesa);
+    return this.http.put<Despesa>(`${this.API_URL}/${id}`, despesa).pipe(retry(3)); // Tenta novamente até 3 vezes em caso de falha
   }
 }
