@@ -1,0 +1,92 @@
+<div class="min-h-screen bg-gray-100 p-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Cabeçalho -->
+    <div class="bg-white rounded-lg shadow p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <h1 class="text-2xl font-bold text-gray-900">Análise de Métricas</h1>
+      
+      <!-- Navegação de Voltar -->
+      <a href="/dashboard" class="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        Voltar ao Dashboard
+      </a>
+    </div>
+
+    <!-- Painel de Controlo (Seletores de Mês) -->
+    <div class="bg-white rounded-lg shadow p-6 border-t-4 border-blue-500">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Seletor do Mês Principal -->
+        <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
+          <h3 class="font-semibold text-blue-800 mb-3">Mês Principal (Análise Detalhada)</h3>
+          <div class="flex gap-2">
+            <select [(ngModel)]="mesPrincipal" (change)="carregarDados()" class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+              @for (m of meses; track m.valor) {
+                <option [value]="m.valor">{{ m.nome }}</option>
+              }
+            </select>
+            <select [(ngModel)]="anoPrincipal" (change)="carregarDados()" class="w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+              @for (a of anos; track a) {
+                <option [value]="a">{{ a }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <!-- Seletor do Mês de Comparação -->
+        <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <h3 class="font-semibold text-gray-600 mb-3">Mês de Comparação</h3>
+          <div class="flex gap-2">
+            <select [(ngModel)]="mesComparacao" (change)="carregarDados()" class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500">
+              @for (m of meses; track m.valor) {
+                <option [value]="m.valor">{{ m.nome }}</option>
+              }
+            </select>
+            <select [(ngModel)]="anoComparacao" (change)="carregarDados()" class="w-24 rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500">
+              @for (a of anos; track a) {
+                <option [value]="a">{{ a }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Área de Gráficos -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- Gráfico Comparativo (Barras) -->
+      <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center justify-center min-h-[350px]">
+        @if (carregando) {
+          <div class="animate-pulse flex space-x-4 items-end h-48 w-full justify-center">
+            <div class="bg-gray-200 w-16 h-32 rounded"></div>
+            <div class="bg-gray-300 w-16 h-48 rounded"></div>
+          </div>
+        } @else {
+          <canvas baseChart
+            [data]="barChartData"
+            [options]="barChartOptions"
+            [type]="'bar'">
+          </canvas>
+        }
+      </div>
+
+      <!-- Gráfico de Distribuição (Doughnut) -->
+      <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center justify-center min-h-[350px]">
+        @if (carregando) {
+          <div class="animate-pulse rounded-full bg-gray-200 h-48 w-48"></div>
+        } @else {
+          <canvas baseChart
+            [data]="doughnutChartData"
+            [options]="doughnutChartOptions"
+            [type]="'doughnut'">
+          </canvas>
+        }
+      </div>
+
+    </div>
+  </div>
+</div>

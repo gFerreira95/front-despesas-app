@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { finalize } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -10,19 +10,24 @@ import { TabelaDespesasComponent } from './components/tabela-despesa/tabela-desp
 import { IndicadoresComponent } from './components/indicadores/indicadores.component';
 import { FiltroDespesasComponent } from './components/filtro-despesas/filtro-despesas.component';
 import { ToastService } from '../../core/services/toast/toast.service';
+import { RouterLink } from '@angular/router'; 
+import { UsuarioService } from '../../core/services/usuario/usuario.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormularioDespesaComponent, TabelaDespesasComponent, IndicadoresComponent, FiltroDespesasComponent],
+  imports: [RouterLink, CommonModule, FormularioDespesaComponent, TabelaDespesasComponent, IndicadoresComponent, FiltroDespesasComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent implements OnInit {
 
+  private usuarioService = inject(UsuarioService);
 
+  // Variável para armazenar a foto do perfil do usuário
+  fotoPerfil: string | null = null;
 
-  // Fonte da verdade (dados brutos da API)
+  // Fonte da verdade (dados da API para o mês selecionado)
   despesasGlobais: Despesa[] = [];
   despesaSelecionada: Despesa | null = null;
 
@@ -34,11 +39,15 @@ export class DashboardComponent implements OnInit {
   filtroTabelaAtivo: FiltroDespesa | null = null;
   filtroIndicadoresAtivo: FiltroDespesa | null = null;
 
-  // Controle do Modal
+  // Controle do Modal e Loading
   modalFiltroVisivel: boolean = false;
   contextoFiltroAtual: 'tabela' | 'indicadores' = 'tabela';
   carregando: boolean = true;
-  isLoading: boolean = false; // Estado de carregamento para desabilitar o botão durante a requisição
+  isLoading: boolean = false; 
+
+  // --- NAVEGAÇÃO MENSAL ---
+  dataVisualizada = new Date(); 
+  meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
   constructor(
     private despesaService: DespesaService,
@@ -49,19 +58,52 @@ export class DashboardComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.carregarDespesas();
+    // Carrega a foto do perfil do usuário
+    this.usuarioService.buscarPerfil().subscribe({
+      next: (perfil) => {
+        if (perfil.fotoPerfilBase64) {
+          this.fotoPerfil = perfil.fotoPerfilBase64;
+        }
+      }
+    });
+
+    // Inicia buscando apenas os dados do mês/ano atual
+    this.carregarDespesasDoMes();
   }
 
-  carregarDespesas(): void {
-    this.carregando = true;
-    this.cdr.detectChanges(); // Força a tela a mostrar o carregamento imediatamente
+  // --- LÓGICA DE NAVEGAÇÃO DE MESES ---
 
-    this.despesaService.listarTodas()
+  mesAnterior(): void {
+    this.dataVisualizada = new Date(this.dataVisualizada.getFullYear(), this.dataVisualizada.getMonth() - 1, 1);
+    this.carregarDespesasDoMes();
+  }
+
+  proximoMes(): void {
+    this.dataVisualizada = new Date(this.dataVisualizada.getFullYear(), this.dataVisualizada.getMonth() + 1, 1);
+    this.carregarDespesasDoMes();
+  }
+
+  get nomeMesAtual(): string {
+    return this.meses[this.dataVisualizada.getMonth()];
+  }
+
+  get anoAtual(): number {
+    return this.dataVisualizada.getFullYear();
+  }
+
+  // Substitui o listarTodas pelo listarPorMes
+  carregarDespesasDoMes(): void {
+    this.carregando = true;
+    this.cdr.detectChanges(); 
+
+    const ano = this.dataVisualizada.getFullYear();
+    const mes = this.dataVisualizada.getMonth() + 1;
+
+    this.despesaService.listarPorMes(ano, mes)
       .pipe(
         finalize(() => {
-          // Este bloco vai rodar CUSTE O QUE CUSTAR no fim da requisição
           this.carregando = false;
-          this.cdr.detectChanges(); // Destrava a tela instantaneamente
+          this.cdr.detectChanges(); 
         })
       )
       .subscribe({
@@ -71,7 +113,7 @@ export class DashboardComponent implements OnInit {
           if (Array.isArray(dados)) {
             listaTratada = dados;
           } else if (dados && Array.isArray(dados.content)) {
-            listaTratada = dados.content; // Lida com a paginação do Spring
+            listaTratada = dados.content; 
           }
 
           this.despesasGlobais = listaTratada;
@@ -85,29 +127,21 @@ export class DashboardComponent implements OnInit {
       });
   }
 
-  salvarDespesa(dadosFormulario: any): void {
+  // --- MÉTODOS ORIGINAIS MANTIDOS INTACTOS ---
 
-    // Ativa o estado de carregamento antes de iniciar a requisição
+  salvarDespesa(dadosFormulario: any): void {
     this.isLoading = true;
 
     if (this.despesaSelecionada && this.despesaSelecionada.id) {
-      // MODO EDIÇÃO (PUT)
       this.despesaService.atualizar(this.despesaSelecionada.id, dadosFormulario)
-
-        .pipe(
-          finalize(() => {
-            this.isLoading = false;
-          })
-        )
-
+        .pipe(finalize(() => this.isLoading = false))
         .subscribe({
           next: (despesaAtualizada) => {
-            // Atualiza a despesa na lista local
             const index = this.despesasGlobais.findIndex(d => d.id === despesaAtualizada.id);
             if (index !== -1) {
               this.despesasGlobais[index] = despesaAtualizada;
             }
-            this.despesaSelecionada = null; // Limpa o estado
+            this.despesaSelecionada = null; 
             this.sincronizarFiltros();
             this.cdr.detectChanges();
             this.toastService.mostrar('Despesa atualizada com sucesso!', 'sucesso');
@@ -118,20 +152,27 @@ export class DashboardComponent implements OnInit {
           }
         });
     } else {
-      // MODO CRIAÇÃO (POST) - (Seu código existente com os Toasts)
       this.despesaService.salvar(dadosFormulario)
-
-        .pipe(
-          finalize(() => {
-            this.isLoading = false;
-            this.cdr.detectChanges();
-          })
-        )
-
+        .pipe(finalize(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }))
         .subscribe({
           next: (novaDespesa) => {
-            this.despesasGlobais.push(novaDespesa);
-            this.sincronizarFiltros();
+            // Transformamos em string de forma segura para o TypeScript não reclamar
+            // Cortamos a data (Ex: "2026-10-05") para ignorar o fuso horário do JS
+            const dataString = String(novaDespesa.data).split('T')[0]; 
+            const partes = dataString.split('-'); 
+            
+            const anoSalvo = parseInt(partes[0], 10);
+            const mesSalvo = parseInt(partes[1], 10) - 1; // getMonth() no JS vai de 0 a 11
+
+            // Só adiciona na tabela instantaneamente se a despesa pertencer ao mês que estamos a ver
+            if (mesSalvo === this.dataVisualizada.getMonth() && anoSalvo === this.dataVisualizada.getFullYear()) {
+                this.despesasGlobais.push(novaDespesa);
+                this.sincronizarFiltros();
+            }
+            
             this.cdr.detectChanges();
             this.toastService.mostrar('Despesa salva com sucesso!', 'sucesso');
           },
@@ -150,7 +191,6 @@ export class DashboardComponent implements OnInit {
         this.despesasGlobais = this.despesasGlobais.filter(d => d.id !== id);
         this.sincronizarFiltros();
         this.cdr.detectChanges();
-        // Dispara o Toast
         this.toastService.mostrar('Despesa excluída com sucesso.', 'aviso');
       },
       error: (erro) => {
@@ -159,8 +199,6 @@ export class DashboardComponent implements OnInit {
       }
     });
   }
-
-  // --- Lógica de Filtros ---
 
   abrirFiltro(contexto: 'tabela' | 'indicadores'): void {
     this.contextoFiltroAtual = contexto;
@@ -182,7 +220,7 @@ export class DashboardComponent implements OnInit {
   }
 
   private aplicarFiltroNoArray(dados: Despesa[], filtro: FiltroDespesa | null): Despesa[] {
-    if (!filtro) return [...dados]; // Retorna cópia da lista inteira se não houver filtro
+    if (!filtro) return [...dados]; 
 
     return dados.filter(d => {
       let passaCategoria = true;
@@ -203,18 +241,14 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // --- Lógica de Edição ---
   prepararEdicao(despesa: Despesa): void {
-    // Clona o objeto para evitar binding bidirecional acidental na tabela
     this.despesaSelecionada = { ...despesa };
-    window.scrollTo({ top: 0, behavior: 'smooth' }); // Rola a página suavemente para o formulário
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
   }
 
   cancelarEdicao(): void {
     this.despesaSelecionada = null;
   }
-
-
 
   logout(): void {
     this.tokenService.removerToken();
